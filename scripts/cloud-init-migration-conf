@@ -1,0 +1,43 @@
+#cloud-config
+
+#bootcmd:
+#  - grep -qxF '${puppet_ip} puppet' /etc/hosts || echo '${puppet_ip} puppet' >> /etc/hosts
+#  - curl -k -X DELETE https://puppet:8140/puppet-ca/v1/certificate_status/`hostname -f`
+#  - curl -k -X DELETE https://puppet:8140/puppet-ca/v1/certificate_status/`hostname`
+apt:
+  sources:
+    puppet6:
+      source: "deb http://apt.puppetlabs.com buster puppet6"
+      keyid: "D6811ED3ADEEB8441AF5AA8F4528B6CD9E61EF26"
+    hashicorp:
+      source: "deb https://apt.releases.hashicorp.com buster main"
+      keyid: "E8A032E094D8EB4EA189D270DA418C88A3219F7B"
+
+package_update: true
+packages:
+- dnsutils
+- [consul, 1.9.8]
+
+puppet:
+  install: true
+  version: "6.25.1-1buster"
+  package_name: "puppet-agent"
+  exec: false
+  conf_file: "/etc/puppetlabs/puppet/puppet.conf"
+  conf:
+    agent:
+      server: "puppet"
+      # TODO: This should be a variable
+      environment: testing #"${puppet_environment}"
+      certname: "%f"
+
+#groups:
+#  - developers: "${DEVELOPERS}"
+
+users:
+  - name: mauricio
+    ssh_authorized_keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILg7QSm+n/79F0Y/RXR/uDTb4POJbdueZmi82JYnGP+6 mauricioca@mauricioca-l52791
+    groups: developers
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
